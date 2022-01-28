@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,12 +13,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Live timing query parameters
-// r = RACE ID
-// m = LAST UPDATED AT
-// u = UPDATE INTERVAL
-
 const RACE_URL = "https://www.live-timing.com/includes/aj_race.php"
+
+type BadRawInputError struct {
+	rawRecord []string
+}
+
+func (b BadRawInputError) Error() string {
+	return fmt.Sprintf("error parsing record string to struct: %v", b.rawRecord)
+}
 
 type Racer struct {
 	Bib       int
@@ -31,18 +35,18 @@ type Racer struct {
 	TotalTime string
 }
 
-func buildRacerStruct(rawData []string) *Racer {
+func buildRacerStruct(rawData []string) (*Racer, error) {
 	record := map[string]string{}
 
 	for _, v := range rawData {
 		entry := strings.Split(v, "=")
 		if len(entry) > 0 {
-			record[entry[0]] = entry[1] //: len(entry)-1]
+			record[entry[0]] = entry[1]
 		}
 	}
 
 	if len(record) == 0 {
-		return nil
+		return nil, BadRawInputError{rawData}
 	}
 
 	// lol error handling
@@ -57,26 +61,26 @@ func buildRacerStruct(rawData []string) *Racer {
 		Run1:      record["r1"],
 		Run2:      record["r2"],
 		TotalTime: record["tt"],
-	}
+	}, nil
 
 }
 
-// Records seem to come in two forms
-// [b=39 m=ALVES, Kayla ms=642966445.56509 c=CASCA s=U14 up=99900 fp=0 r1=DQg18=2147483627 r2=1:00.91=60910]
-// [b=53|m=SHELLY, Eva|ms=642964974.21723|t=CAN|c=FORTU|s=U14|un=105987|up=99900|fp=0|r1=59.60=59600|r2=59.61=59610|tt=1:59.21
-// first is
-
-func convertToJSON(rawData string) (racer []*Racer) {
-
+func convertToJSON(rawData string) (racers []*Racer, err error) {
 	result := strings.Split(rawData, "|")
 
 	var a []string
-	var racers []*Racer
 
 	for _, v := range result {
 		if strings.HasPrefix(v, "b") {
 			if len(a) > 0 && a != nil {
-				racers = append(racers, buildRacerStruct(a))
+				racer, err := buildRacerStruct(a)
+				if err != nil {
+					logrus.Error(err)
+					continue
+				}
+
+				racers = append(racers, racer)
+
 				a = a[:0]
 			}
 
@@ -88,7 +92,7 @@ func convertToJSON(rawData string) (racer []*Racer) {
 		}
 	}
 
-	return racers
+	return racers, err
 }
 
 func checkResponseBody(response *http.Request) string {
@@ -117,6 +121,10 @@ func RequestLoggerMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func NewHTTPClient() *http.Client {
+	return &http.Client{}
+}
+
 func RetrieveRaceResults(w http.ResponseWriter, r *http.Request) {
 	live_timing_request, _ := http.NewRequest("GET", RACE_URL, nil)
 	parameter_passthrough := live_timing_request.URL.Query()
@@ -128,7 +136,7 @@ func RetrieveRaceResults(w http.ResponseWriter, r *http.Request) {
 
 	live_timing_request.URL.RawQuery = parameter_passthrough.Encode()
 
-	client := &http.Client{}
+	client := NewHTTPClient()
 
 	resp, err := client.Do(live_timing_request)
 
@@ -142,7 +150,13 @@ func RetrieveRaceResults(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	jsonPayload := convertToJSON(string(body))
+	jsonPayload, err := convertToJSON(string(body))
+
+	if err != nil {
+		logrus.Error(err)
+		http.Error(w, "Issue parsing data from live timing", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
