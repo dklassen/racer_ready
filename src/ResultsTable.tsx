@@ -80,6 +80,9 @@ export default function ResultsTable() {
                         <TableCell align="right">Name</TableCell>
                         <TableCell align="right">Club</TableCell>
                         <TableCell align="right">Class</TableCell>
+                        <TableCell align="right">Run 1</TableCell>
+                        <TableCell align="right">Run 2</TableCell>
+                        <TableCell align="right">Total Time</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -94,6 +97,10 @@ export default function ResultsTable() {
                             <TableCell align="right">{row.Name}</TableCell>
                             <TableCell align="right">{row.Club}</TableCell>
                             <TableCell align="right">{row.Class}</TableCell>
+                            <TableCell align="right">{row.Run1}</TableCell>
+                            <TableCell align="right">{row.Run2}</TableCell>
+                            <TableCell align="right">{row.TotalTime}</TableCell>
+
                         </TableRow>
                     ))}
                 </TableBody>
