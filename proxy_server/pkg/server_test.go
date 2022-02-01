@@ -2,8 +2,49 @@ package server
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
+
+func TestConfigPortWithPORTEnvVarSetPullsFromEnvironment(t *testing.T) {
+	expectedPort := "1234"
+	expected := ":" + expectedPort
+
+	t.Setenv("PORT", expected)
+
+	output := ConfigPort()
+	if output != expected {
+		t.Errorf("ConfigPort was incorrect, got: %s, want: %s.", output, expected)
+	}
+
+}
+
+func TestConfigPortAddsExpectedPrefix(t *testing.T) {
+	expectedPort := "1234"
+	expected := ":" + expectedPort
+
+	if strings.HasPrefix(expectedPort, ":") {
+		t.Fatalf("Expected port test case should not start with :")
+	}
+
+	t.Setenv("PORT", expectedPort)
+
+	output := ConfigPort()
+	if output != expected {
+		t.Errorf("ConfigPort was incorrect, got: %s, want: %s.", output, expected)
+	}
+}
+
+func TestConfigPortWhenNotSetDefaultsTo8080(t *testing.T) {
+	expected := ":8080"
+
+	t.Setenv("PORT", "")
+
+	output := ConfigPort()
+	if output != expected {
+		t.Errorf("ConfigPort was incorrect, got: %s, want: %s.", output, expected)
+	}
+}
 
 func TestBuildRacerStruct(t *testing.T) {
 	type test struct {
