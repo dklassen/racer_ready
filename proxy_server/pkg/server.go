@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,19 @@ type Racer struct {
 	Run1      string
 	Run2      string
 	TotalTime string
+}
+
+func ConfigPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":8080"
+	}
+
+	if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
+
+	return port
 }
 
 func buildRacerStruct(rawData []string) (*Racer, error) {

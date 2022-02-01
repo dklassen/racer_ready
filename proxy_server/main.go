@@ -18,5 +18,5 @@ func main() {
 	mux.Handle("/", server.RequestLoggerMiddleware(resultsHandler))
 	mux.Handle("/status", statusHandler)
 
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(server.ConfigPort(), mux)
 }
