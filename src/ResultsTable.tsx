@@ -6,6 +6,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 
 interface IRacer {
@@ -39,14 +40,19 @@ function decodeRacer(json: IRacer): IRacer {
  )
 }
 
+export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
+    const race_url = process.env.REACT_APP_RACER_READY_API as string
+    return race_url + "?" + searchParams.toString()
+}
+
 export default function ResultsTable() {
     const [racers, setRacers] = useState<IRacer[]>([]);
+    let [searchParams, _] = useSearchParams();
 
     useEffect(() => {
-        var race_url = "http://localhost:8080?r=227639&&m=1&u=30"
-
+        const endpoint_url = BuildAPIEndpointURL(searchParams);
         const request_headers = new Headers();
-        const results_request = new Request(race_url, {
+        const results_request = new Request(endpoint_url, {
             method: 'GET',
             headers: request_headers,
             cache: 'default',
