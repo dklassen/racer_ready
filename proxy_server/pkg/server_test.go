@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/go-test/deep"
 )
 
 func TestConfigPortWithPORTEnvVarSetPullsFromEnvironment(t *testing.T) {
@@ -43,6 +45,51 @@ func TestConfigPortWhenNotSetDefaultsTo8080(t *testing.T) {
 	output := ConfigPort()
 	if output != expected {
 		t.Errorf("ConfigPort was incorrect, got: %s, want: %s.", output, expected)
+	}
+}
+
+func TestParseRawResponse(t *testing.T) {
+	type test struct {
+		input string
+		want  *Race
+		err   error
+	}
+
+	tests := []test{
+		{
+			input: "1=1=643758233.88783=N=30|hN=U=CALABOGIE U14 GS|hT=Giant Slalom=Women|hC=CAN=ON|hR=CALABOGIE PEAKS|hST=1/23/2022 10:00 AM|hM=|hLL=CalRacing.jpg|hLR=CalPeaks.jpg|hPr=99|hNreg=N|hID=227639|hP=pdf=Race Results|hP=pdf=Penalty Calculation|hP=pdf=Run 2 Condensed St|hP=pdf=Run 1 Condensed St|hE|b=39|m=ALVES, Kayla|ms=642966445.56509|c=CASCA|s=U14|up=99900|fp=0|r1=DQg18=2147483627|r2=1:00.91=60910",
+			want: &Race{
+				Name:      "CALABOGIE U14 GS",
+				Technique: "Giant Slalom",
+				Resort:    "CALABOGIE PEAKS",
+				Country:   "CAN",
+				Province:  "ON",
+				StartTime: "1/23/2022 10:00 AM",
+				Racers: []*Racer{&Racer{
+					Bib:       39,
+					Name:      "ALVES, Kayla",
+					CheckedAt: "642966445.56509",
+					Club:      "CASCA",
+					Class:     "U14",
+					Run1:      "DQg18",
+					Run2:      "1:00.91",
+					TotalTime: "",
+				},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		got, with_err := parseRawResponse(tc.input)
+
+		if with_err != nil && with_err.Error() != tc.err.Error() {
+			t.Fatalf("expected: %+v, got: %+v", tc.err, with_err)
+		}
+
+		if diff := deep.Equal(tc.want, got); diff != nil {
+			t.Error(diff)
+		}
 	}
 }
 

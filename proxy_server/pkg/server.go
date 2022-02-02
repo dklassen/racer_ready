@@ -24,6 +24,17 @@ func (b BadRawInputError) Error() string {
 	return fmt.Sprintf("error parsing record string to struct: %v", b.rawRecord)
 }
 
+type Race struct {
+	Name      string
+	Technique string
+	Gender    string
+	Resort    string
+	StartTime string
+	Country   string
+	Province  string
+	Racers    []*Racer
+}
+
 type Racer struct {
 	Bib       int
 	CheckedAt string
@@ -66,7 +77,7 @@ func buildRacerStruct(rawData []string) (*Racer, error) {
 	// lol error handling
 	convertedBib, _ := strconv.Atoi(record["b"])
 
-	return &Racer{
+	racer := &Racer{
 		Bib:       convertedBib,
 		Name:      record["m"],
 		CheckedAt: record["ms"],
@@ -75,38 +86,109 @@ func buildRacerStruct(rawData []string) (*Racer, error) {
 		Run1:      record["r1"],
 		Run2:      record["r2"],
 		TotalTime: record["tt"],
-	}, nil
+	}
+
+	if racer == nil {
+		return nil, BadRawInputError{rawData}
+	}
+
+	return racer, nil
 
 }
 
-func convertToJSON(rawData string) (racers []*Racer, err error) {
+func parseNameField(field string) string {
+	fieldParts := strings.Split(field, "=")
+	return strings.TrimSpace(fieldParts[1])
+}
+
+func parseTechniqueField(field string) string {
+	fieldParts := strings.Split(field, "=")
+	return strings.TrimSpace(fieldParts[0])
+}
+
+func parseGenderField(field string) string {
+	fieldParts := strings.Split(field, "=")
+	return strings.TrimSpace(fieldParts[1])
+}
+
+func parseCountryField(field string) string {
+	fieldParts := strings.Split(field, "=")
+	return fieldParts[0]
+}
+
+func parseProvinceField(field string) string {
+	fieldParts := strings.Split(field, "=")
+	return fieldParts[1]
+}
+
+func parseResortField(field string) string {
+	return strings.TrimSpace(field)
+}
+
+func parseStartTime(field string) string {
+	return field
+}
+
+func parseRawResponse(rawData string) (*Race, error) {
 	result := strings.Split(rawData, "|")
 
-	var a []string
+	race := &Race{}
+	var tempRacer []string
 
 	for _, v := range result {
-		if strings.HasPrefix(v, "b") {
-			if len(a) > 0 && a != nil {
-				racer, err := buildRacerStruct(a)
+
+		if !strings.ContainsAny(v, "=") {
+			continue
+		}
+
+		field := strings.SplitN(v, "=", 2)
+
+		switch field[0] {
+		case "hN":
+			race.Name = parseNameField(field[1])
+		case "hT":
+			race.Technique = parseTechniqueField(field[1])
+			race.Gender = parseGenderField(field[1])
+		case "hC":
+			race.Country = parseCountryField(field[1])
+			race.Province = parseProvinceField(field[1])
+		case "hR":
+			race.Resort = parseResortField(field[1])
+		case "hST":
+			race.StartTime = parseStartTime(field[1])
+		case "hM":
+			//
+		case "b":
+			if len(tempRacer) > 0 && strings.HasPrefix(tempRacer[0], "b=") {
+				racer, err := buildRacerStruct(tempRacer)
 				if err != nil {
 					logrus.Error(err)
 					continue
 				}
 
-				racers = append(racers, racer)
-
-				a = a[:0]
+				race.Racers = append(race.Racers, racer)
+				tempRacer = tempRacer[:0]
+			} else {
+				tempRacer = tempRacer[:0]
 			}
 
-			a = append(a, v)
-		}
+			tempRacer = append(tempRacer, v)
 
-		if len(a) > 0 {
-			a = append(a, v)
+		default:
+			tempRacer = append(tempRacer, v)
 		}
 	}
 
-	return racers, err
+	if len(tempRacer) > 0 && strings.HasPrefix(tempRacer[0], "b=") {
+		racer, err := buildRacerStruct(tempRacer)
+		if err != nil {
+			logrus.Error(err)
+		}
+		race.Racers = append(race.Racers, racer)
+	}
+
+	return race, nil
+
 }
 
 func checkResponseBody(response *http.Request) string {
@@ -164,7 +246,7 @@ func RetrieveRaceResults(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	jsonPayload, err := convertToJSON(string(body))
+	jsonPayload, err := parseRawResponse(string(body))
 
 	if err != nil {
 		logrus.Error(err)

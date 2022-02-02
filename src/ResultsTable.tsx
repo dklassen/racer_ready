@@ -5,70 +5,15 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { IRacer } from './App';
 
 
-interface IRacer {
-    Bib: number,
-    CheckedAt: string,
-    Class: string,
-    Club: string,
-    Name: string,
-    Rank: string,
-    Run1: string,
-    Run2: string,
-    TotalTime: string,
-}
+type Props = {
+    racers: IRacer[]
+  }
 
-// interface IRacerJSON {
-//     Bib: number,
-//     CheckedAt: string,
-//     Class: string,
-//     Club: string,
-//     Name: string,
-//     Rank: string,
-//     Run1: string,
-//     Run2: string,
-//     TotalTime: string,
-// }
 
-function decodeRacer(json: IRacer): IRacer {
-    return Object.assign({}, json, {
-
-    }
- )
-}
-
-export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
-    const race_url = process.env.REACT_APP_RACER_READY_API as string
-    return race_url + "?" + searchParams.toString()
-}
-
-export default function ResultsTable() {
-    const [racers, setRacers] = useState<IRacer[]>([]);
-    let [searchParams, _] = useSearchParams();
-
-    useEffect(() => {
-        const endpoint_url = BuildAPIEndpointURL(searchParams);
-        const request_headers = new Headers();
-        const results_request = new Request(endpoint_url, {
-            method: 'GET',
-            headers: request_headers,
-            cache: 'default',
-        });
-
-        fetch(results_request)
-            .then(response => {
-                return response.json()
-            })
-            .then(data => {
-                console.log(data)
-                data = data.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1));
-                setRacers(data)
-            }
-            );
-    }, [])
+function ResultsTable( {racers}: Props ) {
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -109,3 +54,6 @@ export default function ResultsTable() {
         </Paper>
     );
 }
+
+
+  export default ResultsTable
