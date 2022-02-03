@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './App.css';
+import RaceInformation from './RaceInformation';
 import './ResultsTable';
 import ResultsTable from './ResultsTable';
 
 
-interface IRace {
+export interface IRace {
   Country: String
   Name: string
   Gender: string
@@ -36,7 +37,17 @@ export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
 
 function App() {
 
-  const [race, setRace] = useState<IRace>();
+  const [race, setRace] = useState<IRace>(
+    {
+      Country: "Unknown",
+      Gender: "Unknown",
+      Province: "Unknown",
+      Name: "Unknown",
+      Technique: "Unknown",
+      StartTime: "Unknown",
+      Resort: "Unknown",
+      Racers: [] as IRacer[]
+  });
   const [racers, setRacers] = useState<IRacer[]>([]);
 
   let [searchParams, _] = useSearchParams();
@@ -68,14 +79,14 @@ function App() {
     <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '100vh'}}>
         <h1> LOADING....</h1>
     </div>);
-  } 
+  }  
   
   return (
     <div className="App">
       <header className="App-header">
           Racer Ready
       </header>
-      <ResultsTable racers={racers}></ResultsTable>
+      <RaceInformation race={race}></RaceInformation>
     </div>
   );
 }
