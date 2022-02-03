@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import './App.css';
 import RaceInformation from './RaceInformation';
 import './ResultsTable';
-import ResultsTable from './ResultsTable';
 
 
 export interface IRace {
