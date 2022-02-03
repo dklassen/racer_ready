@@ -1,4 +1,4 @@
-import { Box, Container } from "@mui/material"
+import { Box, Container, Typography } from "@mui/material"
 import { IRace } from "./App"
 import ResultsTable from "./ResultsTable"
 
@@ -11,20 +11,18 @@ function RaceInformation( {race}: Props ) {
 
     return (
         <Container>
-            <Box sx={{
-                typography: 'h4',
-                textAlign: 'left',
-                paddingTop: '15px',
-            }}>
-            {race.Name} - {race.Technique} {race.Gender}
+                <Box sx={{ paddingTop: '15px', textAlign: 'left' }}>
+
+            <Typography variant="h4" component="div" gutterBottom>
+                {race.Name} - {race.Technique} {race.Gender}
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom component="div">
+             Start Time: {race.StartTime}
+            </Typography>
             </Box>
 
-            <Box sx={{
-                typography: 'h6',
-                textAlign: 'left'
-            }}>
-            Start Time: {race.StartTime}
-            </Box>
+       
+           
 
 
         <ResultsTable racers={race.Racers}></ResultsTable>
