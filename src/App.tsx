@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './App.css';
+import { useInterval } from './hooks';
 import RaceInformation from './RaceInformation';
 import './ResultsTable';
 
@@ -34,6 +35,25 @@ export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
 }
 
 
+const getRaceResults =  (callback: (data: any) => void, searchParams: URLSearchParams ) => {
+  const endpoint_url = BuildAPIEndpointURL(searchParams);
+    const request_headers = new Headers();
+    const results_request = new Request(endpoint_url, {
+        method: 'GET',
+        headers: request_headers,
+        cache: 'default',
+    });
+
+    fetch(results_request)
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            data.Racers = data.Racers.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1));
+            callback(data)
+        })
+}
+
 function App() {
 
   const [race, setRace] = useState<IRace>(
@@ -47,33 +67,14 @@ function App() {
       Resort: "Unknown",
       Racers: [] as IRacer[]
   });
-  const [racers, setRacers] = useState<IRacer[]>([]);
 
   let [searchParams, _] = useSearchParams();
 
-  useEffect(() => {
-      const endpoint_url = BuildAPIEndpointURL(searchParams);
-      const request_headers = new Headers();
-      const results_request = new Request(endpoint_url, {
-          method: 'GET',
-          headers: request_headers,
-          cache: 'default',
-      });
+  useInterval(() => {
+    getRaceResults(setRace,searchParams)
+   }, 5000)  
 
-      fetch(results_request)
-          .then(response => {
-              return response.json()
-          })
-          .then(data => {
-              data.Racers = data.Racers.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1));
-              setRace(data)
-              setRacers(data.Racers)
-          }
-          );
-  }, [])
-
-
-  if (racers.length === 0 ) {
+  if (race.Racers === undefined || race.Racers.length === 0 ) {
     return (
     <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '100vh'}}>
         <h1> LOADING....</h1>

@@ -12,7 +12,6 @@ function RaceInformation( {race}: Props ) {
     return (
         <Container>
                 <Box sx={{ paddingTop: '15px', textAlign: 'left' }}>
-
             <Typography variant="h4" component="div" gutterBottom>
                 {race.Name} - {race.Technique} {race.Gender}
             </Typography>
@@ -20,11 +19,6 @@ function RaceInformation( {race}: Props ) {
              Start Time: {race.StartTime}
             </Typography>
             </Box>
-
-       
-           
-
-
         <ResultsTable racers={race.Racers}></ResultsTable>
     
         </Container>
