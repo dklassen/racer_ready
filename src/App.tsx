@@ -1,3 +1,4 @@
+import { CircularProgress } from '@mui/material';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './App.css';
@@ -34,24 +35,30 @@ export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
   return race_url + "?" + searchParams.toString()
 }
 
-
-const getRaceResults =  (callback: (data: any) => void, searchParams: URLSearchParams ) => {
+const fetchRaceResults = (callback: (data: IRace) => void, searchParams: URLSearchParams) => {
   const endpoint_url = BuildAPIEndpointURL(searchParams);
-    const request_headers = new Headers();
-    const results_request = new Request(endpoint_url, {
-        method: 'GET',
-        headers: request_headers,
-        cache: 'default',
-    });
+  const request_headers = new Headers();
+  const results_request = new Request(endpoint_url, {
+    method: 'GET',
+    headers: request_headers,
+    cache: 'default',
+  });
 
-    fetch(results_request)
-        .then(response => {
-            return response.json()
-        })
-        .then(data => {
-            data.Racers = data.Racers.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1));
-            callback(data)
-        })
+  fetch(results_request)
+    .then(response => {
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+      return response
+    })
+    .then(response => {
+      return response.json()
+    })
+    .then(data => {
+      callback(data)
+    }).catch(function(error) {
+      console.log(error);
+    });
 }
 
 function App() {
@@ -66,25 +73,25 @@ function App() {
       StartTime: "Unknown",
       Resort: "Unknown",
       Racers: [] as IRacer[]
-  });
+    });
 
   let [searchParams, _] = useSearchParams();
 
   useInterval(() => {
-    getRaceResults(setRace,searchParams)
-   }, 5000)  
+    fetchRaceResults(setRace, searchParams)
+  }, 5000)
 
-  if (race.Racers === undefined || race.Racers.length === 0 ) {
+  if (race.Racers === undefined || race.Racers.length === 0) {
     return (
-    <div style={{display: 'flex',  justifyContent:'center', alignItems:'center', height: '100vh'}}>
-        <h1> LOADING....</h1>
-    </div>);
-  }  
-  
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </div>);
+  }
+
   return (
     <div className="App">
       <header className="App-header">
-          Racer Ready
+        Racer Ready
       </header>
       <RaceInformation race={race}></RaceInformation>
     </div>

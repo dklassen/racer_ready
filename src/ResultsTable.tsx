@@ -8,9 +8,45 @@ import Paper from '@mui/material/Paper';
 import { IRacer } from './App';
 
 
+interface IHeader {
+ id: string
+ label: string
+}
+
+const tableHeaders = [
+    {
+        id: 'bib',
+        label: 'Bib #',
+    },
+    {
+        id: "name",
+        label: "Name",
+    },
+    {
+        id: "club",
+        label: "Club",
+    },
+    {
+        id: "class",
+        label: "Class"
+    },
+    {
+        id: "run1",
+        label: "First Run",
+    },
+    {
+        id: "run2",
+        label: "Second Run",
+    },
+    {
+        id: "totalTime",
+        label: "Total Time"
+    }
+]
+
 type Props = {
     racers: IRacer[]
-  }
+}
 
 
 function ResultsTable( {racers}: Props ) {
@@ -21,31 +57,28 @@ function ResultsTable( {racers}: Props ) {
             <Table stickyHeader aria-label="sticky table">
                 <TableHead>
                     <TableRow>
-                        <TableCell>Bib</TableCell>
-                        <TableCell align="right">Name</TableCell>
-                        <TableCell align="right">Club</TableCell>
-                        <TableCell align="right">Class</TableCell>
-                        <TableCell align="right">Run 1</TableCell>
-                        <TableCell align="right">Run 2</TableCell>
-                        <TableCell align="right">Total Time</TableCell>
+                        {
+                            tableHeaders.map((header: IHeader) => (
+                                <TableCell
+                                 key={header.id} 
+                                align="right">{header.label}
+                                </TableCell>
+                        ))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {racers.map((row) => (
+                    {racers.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1)).map((row) => (
                         <TableRow
                             key={row.Bib}
                             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                         >
-                            <TableCell component="th" scope="row">
-                                {row.Bib}
-                            </TableCell>
+                            <TableCell component="th" scope="row">{row.Bib} </TableCell>
                             <TableCell align="right">{row.Name}</TableCell>
                             <TableCell align="right">{row.Club}</TableCell>
                             <TableCell align="right">{row.Class}</TableCell>
                             <TableCell align="right">{row.Run1}</TableCell>
                             <TableCell align="right">{row.Run2}</TableCell>
                             <TableCell align="right">{row.TotalTime}</TableCell>
-
                         </TableRow>
                     ))}
                 </TableBody>
