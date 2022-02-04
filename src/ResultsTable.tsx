@@ -1,45 +1,47 @@
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
+import TableCell, { SortDirection } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { IRacer } from './App';
+import { SetStateAction, useState } from 'react';
+import { TableSortLabel } from '@mui/material';
 
 
 interface IHeader {
- id: string
- label: string
+    id: string
+    label: string
 }
 
 const tableHeaders = [
     {
-        id: 'bib',
+        id: 'Bib',
         label: 'Bib #',
     },
     {
-        id: "name",
+        id: "Name",
         label: "Name",
     },
     {
-        id: "club",
+        id: "Club",
         label: "Club",
     },
     {
-        id: "class",
+        id: "Class",
         label: "Class"
     },
     {
-        id: "run1",
+        id: "Run1",
         label: "First Run",
     },
     {
-        id: "run2",
+        id: "Run2",
         label: "Second Run",
     },
     {
-        id: "totalTime",
+        id: "TotalTime",
         label: "Total Time"
     }
 ]
@@ -48,45 +50,81 @@ type Props = {
     racers: IRacer[]
 }
 
+const sortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number => {
+    if (b[orderField] < a[orderField]) {
+        return -1;
+    }
+    if (b[orderField] > a[orderField]) {
+        return 1;
+    }
+    return 0;
+}
 
-function ResultsTable( {racers}: Props ) {
+function getComparator(order: string, orderBy: string) {
+    return order === 'desc'
+        ? (a: IRacer, b: IRacer) => sortComparison(a, b, orderBy as any)
+        : (a: IRacer, b: IRacer) => -sortComparison(a, b, orderBy as any);
+}
 
+function ResultsTable({ racers }: Props) {
+    const [order, setOrder] = useState('asc');
+    const [orderBy, setOrderBy] = useState('bib');
+
+    const handleRequestSort = (event: any, property: SetStateAction<string>) => {
+        const isAsc = orderBy === property && order === 'asc';
+        
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    const createSortHandler = (property: string) => (event:  React.MouseEvent<HTMLElement>) => {
+        handleRequestSort(event, property);
+    };
+      
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <TableContainer sx={{ maxHeight: 1000 }}>
-            <Table stickyHeader aria-label="sticky table">
-                <TableHead>
-                    <TableRow>
-                        {
-                            tableHeaders.map((header: IHeader) => (
-                                <TableCell
-                                 key={header.id} 
-                                align="right">{header.label}
-                                </TableCell>
-                        ))}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {racers.sort((a: IRacer, b: IRacer) => (a.Bib < b.Bib ? -1 : 1)).map((row) => (
-                        <TableRow
-                            key={row.Bib}
-                            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                        >
-                            <TableCell component="th" scope="row">{row.Bib} </TableCell>
-                            <TableCell align="right">{row.Name}</TableCell>
-                            <TableCell align="right">{row.Club}</TableCell>
-                            <TableCell align="right">{row.Class}</TableCell>
-                            <TableCell align="right">{row.Run1}</TableCell>
-                            <TableCell align="right">{row.Run2}</TableCell>
-                            <TableCell align="right">{row.TotalTime}</TableCell>
+            <TableContainer sx={{ maxHeight: 1000 }}>
+                <Table stickyHeader aria-label="sticky table">
+                    <TableHead>
+                        <TableRow>
+                            {
+                                tableHeaders.map((header: IHeader) => (
+                                    <TableCell
+                                        key={header.id}
+                                        align="right">
+                                        <TableSortLabel
+                                            active={orderBy === header.id}
+                                            direction={orderBy === header.id ? order as any : 'asc'}
+                                            onClick={createSortHandler(header.id)}
+                                        >
+                                            {header.label}
+                                        </TableSortLabel>
+
+                                    </TableCell>
+                                ))}
                         </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                    </TableHead>
+                    <TableBody>
+                        {racers.sort(getComparator(order, orderBy)).map((row) => (
+                            <TableRow
+                                key={row.Bib}
+                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                            >
+                                <TableCell component="th" scope="row">{row.Bib} </TableCell>
+                                <TableCell align="right">{row.Name}</TableCell>
+                                <TableCell align="right">{row.Club}</TableCell>
+                                <TableCell align="right">{row.Class}</TableCell>
+                                <TableCell align="right">{row.Run1}</TableCell>
+                                <TableCell align="right">{row.Run2}</TableCell>
+                                <TableCell align="right">{row.TotalTime}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </Paper>
     );
 }
 
 
-  export default ResultsTable
+export default ResultsTable
