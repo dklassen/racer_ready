@@ -1,12 +1,17 @@
 package server
 
 import (
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/go-test/deep"
 )
+
+func createInt64Pointer(value int64) *int64 {
+	pointer_value := new(int64)
+	*pointer_value = value
+	return pointer_value
+}
 
 func TestConfigPortWithPORTEnvVarSetPullsFromEnvironment(t *testing.T) {
 	expectedPort := "1234"
@@ -62,18 +67,22 @@ func TestParseRawResponse(t *testing.T) {
 				Name:      "CALABOGIE U14 GS",
 				Technique: "Giant Slalom",
 				Resort:    "CALABOGIE PEAKS",
+				Gender:    "Women",
 				Country:   "CAN",
 				Province:  "ON",
 				StartTime: "1/23/2022 10:00 AM",
 				Racers: []*Racer{&Racer{
-					Bib:       39,
-					Name:      "ALVES, Kayla",
-					CheckedAt: "642966445.56509",
-					Club:      "CASCA",
-					Class:     "U14",
-					Run1:      "DQg18",
-					Run2:      "1:00.91",
-					TotalTime: "",
+					Bib:         39,
+					Name:        "ALVES, Kayla",
+					CheckedAt:   "642966445.56509",
+					Club:        "CASCA",
+					Class:       "U14",
+					Run1:        "DQg18",
+					Run1ms:      nil,
+					Run2:        "1:00.91",
+					Run2ms:      createInt64Pointer(60910),
+					TotalTime:   "",
+					TotalTimems: nil,
 				},
 				},
 			},
@@ -104,27 +113,33 @@ func TestBuildRacerStruct(t *testing.T) {
 	tests := []test{
 		{input: []string{"b=39", "m=ALVES, Kayla", "ms=642966445.56509", "c=CASCA", "s=U14", "up=99900", "fp=0", "r1=DQg18=2147483627", "r2=1:00.91=60910"},
 			want: &Racer{
-				Bib:       39,
-				Name:      "ALVES, Kayla",
-				CheckedAt: "642966445.56509",
-				Club:      "CASCA",
-				Class:     "U14",
-				Run1:      "DQg18",
-				Run2:      "1:00.91",
-				TotalTime: "",
+				Bib:         39,
+				Name:        "ALVES, Kayla",
+				CheckedAt:   "642966445.56509",
+				Club:        "CASCA",
+				Class:       "U14",
+				Run1:        "DQg18",
+				Run1ms:      nil,
+				Run2:        "1:00.91",
+				Run2ms:      createInt64Pointer(60910),
+				TotalTime:   "",
+				TotalTimems: nil,
 			},
 			err:    nil,
 			reason: "testing the golden path"},
 		{input: []string{"b=53", "m=SHELLY, Eva", "ms=642964974.21723", "t=CAN", "c=FORTU", "s=U14", "un=105987", "up=99900", "fp=0", "r1=59.60=59600", "r2=59.61=59610", "tt=1:59.21"},
 			want: &Racer{
-				Bib:       53,
-				Name:      "SHELLY, Eva",
-				CheckedAt: "642964974.21723",
-				Club:      "FORTU",
-				Class:     "U14",
-				Run1:      "59.60",
-				Run2:      "59.61",
-				TotalTime: "1:59.21",
+				Bib:         53,
+				Name:        "SHELLY, Eva",
+				CheckedAt:   "642964974.21723",
+				Club:        "FORTU",
+				Class:       "U14",
+				Run1:        "59.60",
+				Run1ms:      createInt64Pointer(59600),
+				Run2:        "59.61",
+				Run2ms:      createInt64Pointer(59610),
+				TotalTime:   "1:59.21",
+				TotalTimems: createInt64Pointer(119210),
 			},
 			err:    nil,
 			reason: "Is a longer format of the data we see coming in"},
@@ -141,8 +156,8 @@ func TestBuildRacerStruct(t *testing.T) {
 			t.Fatalf("expected: %+v, got: %+v", tc.err, with_err)
 		}
 
-		if !reflect.DeepEqual(tc.want, got) {
-			t.Fatalf("expected: %+v, got: %+v", tc.want, got)
+		if diff := deep.Equal(tc.want, got); diff != nil {
+			t.Error(diff)
 		}
 	}
 }

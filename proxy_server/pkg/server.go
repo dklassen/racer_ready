@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -36,15 +37,18 @@ type Race struct {
 }
 
 type Racer struct {
-	Bib       int
-	CheckedAt string
-	Class     string
-	Club      string
-	Name      string
-	Rank      string
-	Run1      string
-	Run2      string
-	TotalTime string
+	Bib         int
+	CheckedAt   string
+	Class       string
+	Club        string
+	Name        string
+	Rank        string
+	Run1        string
+	Run1ms      *int64
+	Run2        string
+	Run2ms      *int64
+	TotalTime   string
+	TotalTimems *int64
 }
 
 func ConfigPort() string {
@@ -58,6 +62,28 @@ func ConfigPort() string {
 	}
 
 	return port
+}
+
+func convertTimeStringtoMS(rawTime string) (*int64, error) {
+	if strings.HasPrefix(rawTime, "DQ") {
+		return nil, fmt.Errorf("tried parsing invalid string to duration %s", rawTime)
+	}
+	if strings.HasPrefix(rawTime, "DNS") {
+		return nil, errors.New("tried parsing an invalid string to duration")
+	}
+	if strings.HasPrefix(rawTime, "DNF") {
+		return nil, errors.New("tried parsing an invalid string to duration")
+	}
+
+	convertedDuration := strings.Replace(rawTime, ":", "m", 1)
+	convertedDuration += "s"
+	runTime, err := time.ParseDuration(convertedDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	milliseconds := runTime.Milliseconds()
+	return &milliseconds, nil
 }
 
 func buildRacerStruct(rawData []string) (*Racer, error) {
@@ -88,12 +114,18 @@ func buildRacerStruct(rawData []string) (*Racer, error) {
 		TotalTime: record["tt"],
 	}
 
-	if racer == nil {
-		return nil, BadRawInputError{rawData}
+	if run1ms, err := convertTimeStringtoMS(racer.Run1); err == nil {
+		racer.Run1ms = run1ms
+	}
+	if run2ms, err := convertTimeStringtoMS(racer.Run2); err == nil {
+		racer.Run2ms = run2ms
+	}
+
+	if totalTimems, err := convertTimeStringtoMS(racer.TotalTime); err == nil {
+		racer.TotalTimems = totalTimems
 	}
 
 	return racer, nil
-
 }
 
 func parseNameField(field string) string {
@@ -165,15 +197,12 @@ func parseRawResponse(rawData string) (*Race, error) {
 					logrus.Error(err)
 					continue
 				}
-
 				race.Racers = append(race.Racers, racer)
 				tempRacer = tempRacer[:0]
 			} else {
 				tempRacer = tempRacer[:0]
 			}
-
 			tempRacer = append(tempRacer, v)
-
 		default:
 			tempRacer = append(tempRacer, v)
 		}

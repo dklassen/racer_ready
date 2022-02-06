@@ -13,36 +13,44 @@ import { TableSortLabel } from '@mui/material';
 interface IHeader {
     id: string
     label: string
+    sortBy: string
 }
 
 const tableHeaders = [
     {
-        id: 'Bib',
-        label: 'Bib #',
+        id: "Bib",
+        label: "Bib #",
+        sortBy: "Bib",
     },
     {
         id: "Name",
         label: "Name",
+        sortBy: "Name",
     },
     {
         id: "Club",
         label: "Club",
+        sortBy: "Club",
     },
     {
         id: "Class",
-        label: "Class"
+        label: "Class",
+        sortBy: "Class",
     },
     {
         id: "Run1",
         label: "First Run",
+        sortBy: "Run1ms"
     },
     {
         id: "Run2",
         label: "Second Run",
+        sortBy: "Run2ms"
     },
     {
         id: "TotalTime",
-        label: "Total Time"
+        label: "Total Time",
+        sortBy: "TotalTimems",
     }
 ]
 
@@ -51,6 +59,15 @@ type Props = {
 }
 
 const sortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number => {
+
+    if (a[orderField] === null) {
+        return -1
+    }
+
+    if (b[orderField] === null) {
+        return 1
+    }
+
     if (b[orderField] < a[orderField]) {
         return -1;
     }
@@ -95,7 +112,7 @@ function ResultsTable({ racers }: Props) {
                                         <TableSortLabel
                                             active={orderBy === header.id}
                                             direction={orderBy === header.id ? order as any : 'asc'}
-                                            onClick={createSortHandler(header.id)}
+                                            onClick={createSortHandler(header.sortBy)}
                                         >
                                             {header.label}
                                         </TableSortLabel>

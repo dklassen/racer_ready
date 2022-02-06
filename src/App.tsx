@@ -26,8 +26,11 @@ export interface IRacer {
   Name: string,
   Rank: string,
   Run1: string,
+  Run1ms: number,
   Run2: string,
+  Run2ms: number,
   TotalTime: string,
+  TotalTimems: number,
 }
 
 export function BuildAPIEndpointURL(searchParams: URLSearchParams): string {
@@ -56,7 +59,7 @@ const fetchRaceResults = (callback: (data: IRace) => void, searchParams: URLSear
     })
     .then(data => {
       callback(data)
-    }).catch(function(error) {
+    }).catch(function (error) {
       console.log(error);
     });
 }
