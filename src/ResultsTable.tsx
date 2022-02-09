@@ -58,8 +58,7 @@ type Props = {
     racers: IRacer[]
 }
 
-const sortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number => {
-
+const SortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number => {
     if (a[orderField] === null) {
         return -1
     }
@@ -79,8 +78,8 @@ const sortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number
 
 function getComparator(order: string, orderBy: string) {
     return order === 'desc'
-        ? (a: IRacer, b: IRacer) => sortComparison(a, b, orderBy as any)
-        : (a: IRacer, b: IRacer) => -sortComparison(a, b, orderBy as any);
+        ? (a: IRacer, b: IRacer) => SortComparison(a, b, orderBy as any)
+        : (a: IRacer, b: IRacer) => -SortComparison(a, b, orderBy as any);
 }
 
 function ResultsTable({ racers }: Props) {
@@ -89,15 +88,15 @@ function ResultsTable({ racers }: Props) {
 
     const handleRequestSort = (event: any, property: SetStateAction<string>) => {
         const isAsc = orderBy === property && order === 'asc';
-        
+
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
 
-    const createSortHandler = (property: string) => (event:  React.MouseEvent<HTMLElement>) => {
+    const createSortHandler = (property: string) => (event: React.MouseEvent<HTMLElement>) => {
         handleRequestSort(event, property);
     };
-      
+
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <TableContainer sx={{ maxHeight: 1000 }}>
@@ -143,5 +142,5 @@ function ResultsTable({ racers }: Props) {
     );
 }
 
-
+export { SortComparison }
 export default ResultsTable
