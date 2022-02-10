@@ -10,10 +10,9 @@ interface ITestObject {
 describe("ResultsTable", () => {
     it("renders without crashing", () => {
         const div = document.createElement('div');
-        ReactDOM.render(<BrowserRouter><ResultsTable racers={[]} /></BrowserRouter>, div);
+        ReactDOM.render(<BrowserRouter><ResultsTable sortFunc={(a, b, c) => 0} racers={[]} /></BrowserRouter>, div);
     });
 })
-
 
 describe("SortComparison behaviour", () => {
     it("sorting numbers defaults to descending", () => {
