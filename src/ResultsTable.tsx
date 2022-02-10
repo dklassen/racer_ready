@@ -9,6 +9,7 @@ import { IRacer } from './App';
 import { SetStateAction, useState } from 'react';
 import { TableSortLabel } from '@mui/material';
 
+type SortDirection = 'DESCENDING' | 'ASCENDING';
 
 interface IHeader {
     id: string
@@ -79,20 +80,20 @@ const SortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number
     return 0;
 }
 
-function getComparator(order: string, orderBy: string, descendingComparisonFunc: ObjectSortFunc) {
-    return order === 'desc'
+function getComparator(order: SortDirection, orderBy: string, descendingComparisonFunc: ObjectSortFunc) {
+    return order === 'DESCENDING'
         ? (a: IRacer, b: IRacer) => descendingComparisonFunc(a, b, orderBy as any)
         : (a: IRacer, b: IRacer) => -descendingComparisonFunc(a, b, orderBy as any);
 }
 
 function ResultsTable({ racers, sortFunc }: Props) {
-    const [order, setOrder] = useState('asc');
+    const [order, setOrder] = useState<SortDirection>('ASCENDING');
     const [orderBy, setOrderBy] = useState('bib');
 
     const handleRequestSort = (event: any, property: SetStateAction<string>) => {
-        const isAsc = orderBy === property && order === 'asc';
+        const isAsc = orderBy === property && order === 'ASCENDING';
 
-        setOrder(isAsc ? 'desc' : 'asc');
+        setOrder(isAsc ? 'DESCENDING' : 'ASCENDING');
         setOrderBy(property);
     };
 
