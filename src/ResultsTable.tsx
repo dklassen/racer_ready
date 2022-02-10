@@ -54,8 +54,11 @@ const tableHeaders = [
     }
 ]
 
+type ObjectSortFunc = <T, K extends keyof T>(a: T, b: T, orderField: K) => number
+
 type Props = {
     racers: IRacer[]
+    sortFunc: ObjectSortFunc
 }
 
 const SortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number => {
@@ -76,13 +79,13 @@ const SortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number
     return 0;
 }
 
-function getComparator(order: string, orderBy: string) {
+function getComparator(order: string, orderBy: string, descendingComparisonFunc: ObjectSortFunc) {
     return order === 'desc'
-        ? (a: IRacer, b: IRacer) => SortComparison(a, b, orderBy as any)
-        : (a: IRacer, b: IRacer) => -SortComparison(a, b, orderBy as any);
+        ? (a: IRacer, b: IRacer) => descendingComparisonFunc(a, b, orderBy as any)
+        : (a: IRacer, b: IRacer) => -descendingComparisonFunc(a, b, orderBy as any);
 }
 
-function ResultsTable({ racers }: Props) {
+function ResultsTable({ racers, sortFunc }: Props) {
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('bib');
 
@@ -121,7 +124,7 @@ function ResultsTable({ racers }: Props) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {racers.sort(getComparator(order, orderBy)).map((row) => (
+                        {racers.sort(getComparator(order, orderBy, sortFunc)).map((row) => (
                             <TableRow
                                 key={row.Bib}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
