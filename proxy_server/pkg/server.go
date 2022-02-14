@@ -42,6 +42,7 @@ type Racer struct {
 	Class       string
 	Club        string
 	Name        string
+	OnCourse    bool
 	Rank        string
 	Run1        string
 	Run1ms      *int64
@@ -109,6 +110,7 @@ func buildRacerStruct(rawData []string) (*Racer, error) {
 		CheckedAt: record["ms"],
 		Club:      record["c"],
 		Class:     record["s"],
+		OnCourse:  false,
 		Run1:      record["r1"],
 		Run2:      record["r2"],
 		TotalTime: record["tt"],
@@ -119,6 +121,10 @@ func buildRacerStruct(rawData []string) (*Racer, error) {
 	}
 	if run2ms, err := convertTimeStringtoMS(racer.Run2); err == nil {
 		racer.Run2ms = run2ms
+	}
+
+	if racer.Run1 == "On Course" || racer.Run2 == "On Course" {
+		racer.OnCourse = true
 	}
 
 	if totalTimems, err := convertTimeStringtoMS(racer.TotalTime); err == nil {
