@@ -1,5 +1,5 @@
 import { CircularProgress } from '@mui/material';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import './App.css';
 import { useInterval } from './hooks';
@@ -25,6 +25,7 @@ export interface IRacer {
   Club: string,
   Name: string,
   Rank: string,
+  OnCourse: Boolean,
   Run1: string,
   Run1ms: number,
   Run2: string,
