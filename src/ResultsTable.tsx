@@ -9,7 +9,7 @@ import { IRacer } from './App';
 import { SetStateAction, useState } from 'react';
 import { TableSortLabel } from '@mui/material';
 
-type SortDirection = 'DESCENDING' | 'ASCENDING';
+type SortDirection = 'desc' | 'asc';
 type TableRowAlignment = "inherit" | "left" | "center" | "right" | "justify" | undefined
 
 interface IHeader {
@@ -90,19 +90,19 @@ const SortComparison = <T, K extends keyof T>(a: T, b: T, orderField: K): number
 }
 
 function getComparator(order: SortDirection, orderBy: string, descendingComparisonFunc: ObjectSortFunc) {
-    return order === 'DESCENDING'
+    return order === 'desc'
         ? (a: IRacer, b: IRacer) => descendingComparisonFunc(a, b, orderBy as any)
         : (a: IRacer, b: IRacer) => -descendingComparisonFunc(a, b, orderBy as any);
 }
 
 function ResultsTable({ racers, sortFunc }: Props) {
-    const [order, setOrder] = useState<SortDirection>('ASCENDING');
+    const [order, setOrder] = useState<SortDirection>('asc');
     const [orderBy, setOrderBy] = useState('bib');
 
     const handleRequestSort = (event: any, property: SetStateAction<string>) => {
-        const isAsc = orderBy === property && order === 'ASCENDING';
+        const isAsc = orderBy === property && order === 'asc';
 
-        setOrder(isAsc ? 'DESCENDING' : 'ASCENDING');
+        setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
     };
 
@@ -122,8 +122,8 @@ function ResultsTable({ racers, sortFunc }: Props) {
                                         key={header.id}
                                         align={header.align}>
                                         <TableSortLabel
-                                            active={orderBy === header.id}
-                                            direction={orderBy === header.id ? order as any : 'asc'}
+                                            active={orderBy === header.sortBy}
+                                            direction={orderBy === header.sortBy ? order as any : 'asc'}
                                             onClick={createSortHandler(header.sortBy)}
                                         >
                                             {header.label}
